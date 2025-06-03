@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{a111ab90-fae5-44c7-b593-12a0eed23c7a}</ProjectGuid>
+    <RootNamespace>OpenGLPBR</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(SolutionDir)bin\$(Configuration)-$(Platform)\$(ProjectName)\</OutDir>
+    <IntDir>$(SolutionDir)bin-int\$(Configuration)-$(Platform)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)bin\$(Configuration)-$(Platform)\$(ProjectName)\</OutDir>
+    <IntDir>$(SolutionDir)bin-int\$(Configuration)-$(Platform)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(SolutionDir)OpenGL_PBR\src;$(SolutionDir)OpenGL_PBR\third_party;</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(SolutionDir)OpenGL_PBR\src;$(SolutionDir)OpenGL_PBR\third_party;</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="src\renderer\Primitives.h" />
+    <ClInclude Include="src\renderer\PBRRenderer.h" />
+    <ClInclude Include="src\scene\Model.h" />
+    <ClInclude Include="src\scene\Mesh.h" />
+    <ClInclude Include="src\renderer\Shader.h" />
+    <ClInclude Include="src\renderer\Renderer.h" />
+    <ClInclude Include="src\core\InputManager.h" />
+    <ClInclude Include="src\core\Application.h" />
+    <ClInclude Include="src\core\Camera.h" />
+    <ClInclude Include="src\core\Window.h" />
+    <ClInclude Include="src\utils\TextureLoader.h" />
+    <ClInclude Include="third_party\stb\stb_image.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\renderer\Primitives.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\renderer\PBRRenderer.cpp" />
+    <ClCompile Include="src\scene\Model.cpp" />
+    <ClCompile Include="src\scene\Mesh.cpp" />
+    <ClCompile Include="src\renderer\Shader.cpp" />
+    <ClCompile Include="src\renderer\Renderer.cpp" />
+    <ClCompile Include="src\core\InputManager.cpp" />
+    <ClCompile Include="src\core\Application.cpp" />
+    <ClCompile Include="src\core\Camera.cpp" />
+    <ClCompile Include="src\core\Window.cpp" />
+    <ClCompile Include="src\utils\TextureLoader.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="assets\textures\awesomeface.png" />
+    <Image Include="assets\textures\background.jpg" />
+    <Image Include="assets\textures\block.png" />
+    <Image Include="assets\textures\block_solid.png" />
+    <Image Include="assets\textures\bricks2.jpg" />
+    <Image Include="assets\textures\bricks2_disp.jpg" />
+    <Image Include="assets\textures\bricks2_normal.jpg" />
+    <Image Include="assets\textures\brickwall.jpg" />
+    <Image Include="assets\textures\brickwall_normal.jpg" />
+    <Image Include="assets\textures\concreteTexture.png" />
+    <Image Include="assets\textures\container.jpg" />
+    <Image Include="assets\textures\container2.png" />
+    <Image Include="assets\textures\container2_specular.png" />
+    <Image Include="assets\textures\container2_specular_colored.png" />
+    <Image Include="assets\textures\grass.png" />
+    <Image Include="assets\textures\marble.jpg" />
+    <Image Include="assets\textures\matrix.jpg" />
+    <Image Include="assets\textures\metal.png" />
+    <Image Include="assets\textures\paddle.png" />
+    <Image Include="assets\textures\particle.png" />
+    <Image Include="assets\textures\pbr\gold\albedo.png" />
+    <Image Include="assets\textures\pbr\gold\ao.png" />
+    <Image Include="assets\textures\pbr\gold\metallic.png" />
+    <Image Include="assets\textures\pbr\gold\normal.png" />
+    <Image Include="assets\textures\pbr\gold\roughness.png" />
+    <Image Include="assets\textures\pbr\grass\albedo.png" />
+    <Image Include="assets\textures\pbr\grass\ao.png" />
+    <Image Include="assets\textures\pbr\grass\metallic.png" />
+    <Image Include="assets\textures\pbr\grass\normal.png" />
+    <Image Include="assets\textures\pbr\grass\roughness.png" />
+    <Image Include="assets\textures\pbr\plastic\albedo.png" />
+    <Image Include="assets\textures\pbr\plastic\ao.png" />
+    <Image Include="assets\textures\pbr\plastic\metallic.png" />
+    <Image Include="assets\textures\pbr\plastic\normal.png" />
+    <Image Include="assets\textures\pbr\plastic\roughness.png" />
+    <Image Include="assets\textures\pbr\rusted_iron\albedo.png" />
+    <Image Include="assets\textures\pbr\rusted_iron\ao.png" />
+    <Image Include="assets\textures\pbr\rusted_iron\metallic.png" />
+    <Image Include="assets\textures\pbr\rusted_iron\normal.png" />
+    <Image Include="assets\textures\pbr\rusted_iron\roughness.png" />
+    <Image Include="assets\textures\pbr\wall\albedo.png" />
+    <Image Include="assets\textures\pbr\wall\ao.png" />
+    <Image Include="assets\textures\pbr\wall\metallic.png" />
+    <Image Include="assets\textures\pbr\wall\normal.png" />
+    <Image Include="assets\textures\pbr\wall\roughness.png" />
+    <Image Include="assets\textures\powerup_chaos.png" />
+    <Image Include="assets\textures\powerup_confuse.png" />
+    <Image Include="assets\textures\powerup_increase.png" />
+    <Image Include="assets\textures\powerup_passthrough.png" />
+    <Image Include="assets\textures\powerup_speed.png" />
+    <Image Include="assets\textures\powerup_sticky.png" />
+    <Image Include="assets\textures\skybox\back.jpg" />
+    <Image Include="assets\textures\skybox\bottom.jpg" />
+    <Image Include="assets\textures\skybox\front.jpg" />
+    <Image Include="assets\textures\skybox\left.jpg" />
+    <Image Include="assets\textures\skybox\right.jpg" />
+    <Image Include="assets\textures\skybox\top.jpg" />
+    <Image Include="assets\textures\toy_box_diffuse.png" />
+    <Image Include="assets\textures\toy_box_disp.png" />
+    <Image Include="assets\textures\toy_box_normal.png" />
+    <Image Include="assets\textures\window.png" />
+    <Image Include="assets\textures\wood.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="assets\shaders\backgroundShader\background.frag" />
+    <None Include="assets\shaders\backgroundShader\background.vert" />
+    <None Include="assets\shaders\brdfShader\brdf.frag" />
+    <None Include="assets\shaders\brdfShader\brdf.vert" />
+    <None Include="assets\shaders\equirectangularToCubemapShader\equirectangularToCubemap.frag" />
+    <None Include="assets\shaders\equirectangularToCubemapShader\equirectangularToCubemap.vert" />
+    <None Include="assets\shaders\irradianceShader\irradiance.frag" />
+    <None Include="assets\shaders\irradianceShader\irradiance.vert" />
+    <None Include="assets\shaders\pbrShader\pbr.frag" />
+    <None Include="assets\shaders\pbrShader\pbr.vert" />
+    <None Include="assets\shaders\prefilterShader\prefilter.frag" />
+    <None Include="assets\shaders\prefilterShader\prefilter.vert" />
+    <None Include="assets\textures\hdr\newport_loft.hdr" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34902.65
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenGL_PBR", "OpenGL_PBR\OpenGL_PBR.vcxproj", "{A111AB90-FAE5-44C7-B593-12A0EED23C7A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A111AB90-FAE5-44C7-B593-12A0EED23C7A}.Debug|x64.ActiveCfg = Debug|x64
+		{A111AB90-FAE5-44C7-B593-12A0EED23C7A}.Debug|x64.Build.0 = Debug|x64
+		{A111AB90-FAE5-44C7-B593-12A0EED23C7A}.Release|x64.ActiveCfg = Release|x64
+		{A111AB90-FAE5-44C7-B593-12A0EED23C7A}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A80C9456-3D52-42A8-977C-4348DFFB0E0A}
+	EndGlobalSection
+EndGlobal
