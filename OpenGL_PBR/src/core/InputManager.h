@@ -7,6 +7,7 @@
 
 
 #include "Camera.h"
+#include "imgui/backends/imgui_impl_glfw.h"
 
 namespace core {
 
@@ -20,23 +21,35 @@ namespace core {
         // deltaTime 用于让不同帧率下移动速度保持一致
         void ProcessInput(float deltaTime);
 
+        // 鼠标移动回调（GLFW 调用）
+        static void MouseMoveCallback(GLFWwindow* window, double xpos, double ypos);
+
+        // 鼠标按钮 回调
+        static void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
+
+        // 滚轮滚动回调（GLFW 调用）
+        static void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
+
     private:
+        // 只有在鼠标右键按下时才对摄像机进行旋转
+        void OnMouseMove(double xpos, double ypos);
+
+        // 只有鼠标右键按下/松开时，切换光标模式
+        void OnMouseButton(int button, int action);
+
+        // 始终响应滚轮缩放
+		void OnScroll(double yoffset);
+
         GLFWwindow* m_Window;   // 底层 GLFW 窗口指针
         Camera* m_Camera;  // 受控的相机指针
 
-        float m_LastX;          // 上一次鼠标 X 坐标
-        float m_LastY;          // 上一次鼠标 Y 坐标
-        bool  m_FirstMouse;     // 是否首次捕获鼠标，用于初始化 m_LastX/m_LastY
+        // 记录上一次鼠标位置，用于计算偏移
+        float  m_LastX;
+        float  m_LastY;
+        bool   m_FirstMouse;
 
-        // GLFW 鼠标移动回调（静态函数），内部转发给实例方法
-        static void MouseCallback(GLFWwindow* window, double xpos, double ypos);
-        // GLFW 滚轮回调（静态函数），内部转发给实例方法
-        static void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
-
-        // 实例的方法：真正处理鼠标移动
-        void OnMouseMove(double xpos, double ypos);
-        // 实例的方法：真正处理滚轮变动
-        void OnScroll(double yoffset);
+        // 记录上一次鼠标右键状态
+        bool   m_RButtonPressedLastFrame;
     };
 
 } // namespace core

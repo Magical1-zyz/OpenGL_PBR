@@ -324,14 +324,17 @@ namespace renderer {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // 2. 渲染 PBR 球体
-        pbrShader.use();
+        // 2. 计算 view、projection 矩阵
         glm::mat4 view = camera.GetViewMatrix();
         glm::mat4 projection = glm::perspective(
             glm::radians(camera.Zoom),
             (float)SCR_WIDTH / (float)SCR_HEIGHT,
             0.1f, 100.0f
         );
+
+        // 3. 绘制 PBR 球体（及光源小球），保持默认深度设置
+        //    深度测试已在 Window 初始化时 glEnable(GL_DEPTH_TEST) 并设为 GL_LEQUAL/GL_LESS
+        pbrShader.use();
         pbrShader.setMat4("view", view);
         pbrShader.setMat4("projection", projection);
         pbrShader.setVec3("camPos", camera.Position);
@@ -367,7 +370,7 @@ namespace renderer {
             Primitives::RenderSphere();
         }
 
-        // 3. 渲染“光源”小球
+        // 4. 渲染“光源”小球
         for (size_t i = 0; i < lightPositions.size(); ++i) {
             glm::vec3 newPos = lightPositions[i];
             pbrShader.setVec3("lightPositions[" + std::to_string(i) + "]", newPos);
@@ -384,13 +387,29 @@ namespace renderer {
             Primitives::RenderSphere();
         }
 
-        // 4. 渲染天空盒（背景立方体贴图）
+        // 5. 渲染天空盒（背景立方体贴图）
+        //    a) 关闭深度写入，让天空盒永远绘制在最远处；
+        //    b) 使用去掉平移分量的 view 矩阵。
+
+        // 5.1 关闭深度写入
+        glDepthMask(GL_FALSE);
+        // 可选：确保深度函数为 “小于或等于”。
+        // 如果之前设置的是 GL_LESS，也可以在此改为 GL_LEQUAL：
+        glDepthFunc(GL_LEQUAL);
+
         backgroundShader.use();
-        backgroundShader.setMat4("view", view);
+        // 去掉 view 中的平移成分：只保留旋转部分
+        glm::mat4 viewNoTranslate = glm::mat4(glm::mat3(view));
+        backgroundShader.setMat4("view", viewNoTranslate);
         backgroundShader.setMat4("projection", projection);
+
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
-		Primitives::RenderCube();
+        Primitives::RenderCube();
+
+        // 5.2 恢复深度写入和深度函数
+        glDepthMask(GL_TRUE);
+        glDepthFunc(GL_LESS);
     }
 
     /// 处理窗口大小变化

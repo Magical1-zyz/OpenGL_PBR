@@ -14,6 +14,7 @@
 #include "Primitives.h"
 #include "core/Camera.h"   
 #include "utils/TextureLoader.h"  
+#include "imgui/imgui.h"
 
 
 
@@ -48,6 +49,15 @@ namespace renderer {
 
         /// 更换 HDR 环境图
         void LoadHDRI(const std::string& hdrPath);
+
+        // ********** 新增：让外部可以访问并修改光源 **********
+        std::vector<glm::vec3> lightPositions;
+        std::vector<glm::vec3> lightColors;
+
+        // ********** 如果还想让外部调整其它参数，也可以暴露出去 **********
+        // 例如曝光、gamma 等……
+        float exposure = 1.0f;
+        float gamma = 2.2f;
 
     private:
         unsigned int SCR_WIDTH, SCR_HEIGHT;
@@ -89,15 +99,6 @@ namespace renderer {
         std::vector<std::string> materialFolders;
         std::vector<std::string> hdrPaths;
 
-        // ------------------------------------------------------------
-        // 4. 光源位置与颜色
-        std::vector<glm::vec3> lightPositions;
-        std::vector<glm::vec3> lightColors;
-
-        // ------------------------------------------------------------
-        // 5. ImGui 可调参数
-        float exposure = 1.0f;
-        float gamma = 2.2f;
         bool useNormalMap = true;
     };
 
