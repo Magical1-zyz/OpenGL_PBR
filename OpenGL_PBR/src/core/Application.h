@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <iostream>
+#include <filesystem>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -26,13 +27,16 @@ private:
 	void InitImGui();
 	void CleanupImGui();
 
-	void ProcessInput(float deltaTime);
+	// void ProcessInput(float deltaTime);
     void Update(float deltaTime);
     void Render();
 
     void ShowFrameStats();
     void ShowSettings();
 	void ShowControls();
+
+	void ScanHDRDirectory(const std::string& directory);
+	void ScanMaterialDirectory(const std::string& directory);
 
 private:
     int m_ScreenWidth, m_ScreenHeight;
@@ -48,4 +52,11 @@ private:
     float m_LastFrameTime = 0.0f;
 	float m_FPS = 0.0f;
     float m_FrameTimeMs = 0.0f;
+
+	// HDR 文件列表和当前选择索引
+	std::vector<std::string>  m_HDRIPaths;
+	int                       m_CurrentHDRI = 0;
+
+	// PBR 材质列表 & 当前选中索引
+	std::vector<std::string> m_MaterialNames;
 };

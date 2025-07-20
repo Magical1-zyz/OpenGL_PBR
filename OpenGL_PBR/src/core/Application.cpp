@@ -1,14 +1,17 @@
 #include "Application.h"
 
-void FramebufferSizeCallback(GLFWwindow* window, int width, int height) {
+namespace fs = std::filesystem;
+
+void FramebufferSizeCallback(GLFWwindow* window, int width, int height)
+{
     glViewport(0, 0, width, height);
 }
 
 
 Application::Application(int width, int height, const std::string& title)
     : m_ScreenWidth(width),
-    m_ScreenHeight(height),
-    m_WindowTitle(title)
+      m_ScreenHeight(height),
+      m_WindowTitle(title)
 {
     // 1) 初始化窗口 + OpenGL 上下文（此时 GLFW 已经 init 并设置了 error callback）
     InitWindow();
@@ -16,21 +19,28 @@ Application::Application(int width, int height, const std::string& title)
     // 2) 初始化 ImGui
     InitImGui();
 
-    // 3) 初始化摄像机、输入管理、PBR 渲染器
+    // 3)扫描 HDR 贴图目录
+    ScanHDRDirectory("assets/textures/hdr");
+
+    // 4)创建 Camera、InputManager、PBRRenderer...
     m_Camera = std::make_unique<core::Camera>(glm::vec3(0.0f, 0.0f, 3.0f));
     m_InputManager = std::make_unique<core::InputManager>(m_Window->GetGLFWwindow(), m_Camera.get());
     m_PBRRenderer = std::make_unique<renderer::PBRRenderer>(m_ScreenWidth, m_ScreenHeight);
 
-    // 4) 加载默认 HDRI、初始化 PBR 所需资源
-    m_PBRRenderer->InitPBR("assets/textures/hdr/newport_loft.hdr");
+    // 如果有 HDR 文件，就加载第一个
+    if (!m_HDRIPaths.empty())
+    {
+        m_PBRRenderer->InitPBR(m_HDRIPaths[0]);
+    }
 
     // 5) 初始化默认光源
-    if (m_PBRRenderer->lightPositions.empty()) {
+    if (m_PBRRenderer->lightPositions.empty())
+    {
         m_PBRRenderer->lightPositions = {
-            { -10.0f,  10.0f, 10.0f },
-            {  10.0f,  10.0f, 10.0f },
-            { -10.0f, -10.0f, 10.0f },
-            {  10.0f, -10.0f, 10.0f }
+            {-10.0f, 10.0f, 10.0f},
+            {10.0f, 10.0f, 10.0f},
+            {-10.0f, -10.0f, 10.0f},
+            {10.0f, -10.0f, 10.0f}
         };
         m_PBRRenderer->lightColors = {
             {300.0f, 300.0f, 300.0f},
@@ -39,21 +49,31 @@ Application::Application(int width, int height, const std::string& title)
             {300.0f, 300.0f, 300.0f}
         };
     }
+
+    // 扫描 PBR 材质目录
+    ScanMaterialDirectory("assets/textures/pbr");
+    m_PBRRenderer->LoadAllMaterials(
+    m_MaterialNames, 
+    std::string("assets/textures/pbr")
+);
 }
 
-Application::~Application() {
+Application::~Application()
+{
     CleanupImGui();
-	glfwTerminate();
+    glfwTerminate();
 }
 
-void Application::InitWindow() {
+void Application::InitWindow()
+{
     m_Window = std::make_unique<core::Window>(m_ScreenWidth, m_ScreenHeight, m_WindowTitle);
 
     // 注册帧缓冲大小回调
     m_Window->SetFramebufferSizeCallback(FramebufferSizeCallback);
 }
 
-void Application::InitImGui() {
+void Application::InitImGui()
+{
     // 1) 创建 ImGui 上下文
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -68,7 +88,8 @@ void Application::InitImGui() {
     ImGui_ImplOpenGL3_Init(m_GLVersion);
 }
 
-void Application::CleanupImGui() {
+void Application::CleanupImGui()
+{
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
@@ -76,13 +97,13 @@ void Application::CleanupImGui() {
 
 //void Application::InitSystems() {
 //
-    //// 1. 摄像机
-    //m_Camera = std::make_unique<core::Camera>(
-    //    glm::vec3(0.0f, 0.0f, 3.0f),
-    //    glm::vec3(0.0f, 1.0f, 0.0f),
-    //    -90.0f,
-    //    0.0f
-    //);
+//// 1. 摄像机
+//m_Camera = std::make_unique<core::Camera>(
+//    glm::vec3(0.0f, 0.0f, 3.0f),
+//    glm::vec3(0.0f, 1.0f, 0.0f),
+//    -90.0f,
+//    0.0f
+//);
 //
 //    // 2. 输入管理
 //    m_InputManager = std::make_unique<core::InputManager>(m_Window->GetGLFWwindow(), m_Camera.get());
@@ -92,8 +113,10 @@ void Application::CleanupImGui() {
 //    m_PBRRenderer->InitPBR("assets/textures/hdr/newport_loft.hdr");
 //}
 
-void Application::Run() {
-    while (!m_Window->ShouldClose()) {
+void Application::Run()
+{
+    while (!m_Window->ShouldClose())
+    {
         // 1) 计算 deltaTime
         float currentTime = static_cast<float>(glfwGetTime());
         float dt = currentTime - m_LastFrameTime;
@@ -117,17 +140,21 @@ void Application::Run() {
         // 5) 决定光标模式：
         //    如果 ImGui 要捕获鼠标，一定显示光标（GLFW_CURSOR_NORMAL），
         //    否则就让 InputManager 里“是否按住右键”的逻辑来决定：
-        if (wantMouse) {
+        if (wantMouse)
+        {
             glfwSetInputMode(m_Window->GetGLFWwindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         }
-        else {
+        else
+        {
             // 如果“右键已经按下”，InputManager 里已经做了 glfwSetInputMode(..., DISABLED)，
             // 所以这里不再一律禁止。只有当“右键没按下”时，再把光标显示出来：
-            if (glfwGetMouseButton(m_Window->GetGLFWwindow(), GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE) {
+            if (glfwGetMouseButton(m_Window->GetGLFWwindow(), GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE)
+            {
                 // 右键松开，光标可见
                 glfwSetInputMode(m_Window->GetGLFWwindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             }
-            else {
+            else
+            {
                 // 右键按下时，InputManager 已经叫我们隐藏了光标，这里什么也不干
             }
         }
@@ -138,7 +165,7 @@ void Application::Run() {
         // 7) ImGui 界面
         /*ShowFrameStats();
         ShowSettings();*/
-		ShowControls();
+        ShowControls();
 
         // 8) ImGui 绘制到屏幕
         ImGui::Render();
@@ -150,7 +177,8 @@ void Application::Run() {
     }
 }
 
-void Application::Render() {
+void Application::Render()
+{
     // 1. 清理颜色和深度缓冲
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -160,7 +188,8 @@ void Application::Render() {
 }
 
 
-void Application::ShowFrameStats() {
+void Application::ShowFrameStats()
+{
     // 你可以给窗口加 ImGuiWindowFlags_Resizable，以保证它可以手动调整大小
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_AlwaysAutoResize;
     // 如果你想要手动拖动调整大小，可以去掉 ImGuiWindowFlags_AlwaysAutoResize
@@ -172,29 +201,34 @@ void Application::ShowFrameStats() {
     ImGui::End();
 }
 
-void Application::ShowSettings() {
+void Application::ShowSettings()
+{
     // 先开启一个可调整大小的窗口
     ImGui::Begin("Lighting Settings");
 
     // 1) 显示并可修改 exposure / gamma（如果 PBRRenderer 暴露了的话）
     float expo = m_PBRRenderer->exposure;
-    if (ImGui::SliderFloat("Exposure", &expo, 0.01f, 10.0f)) {
+    if (ImGui::SliderFloat("Exposure", &expo, 0.01f, 10.0f))
+    {
         m_PBRRenderer->exposure = expo;
     }
     float g = m_PBRRenderer->gamma;
-    if (ImGui::SliderFloat("Gamma", &g, 0.1f, 3.0f)) {
+    if (ImGui::SliderFloat("Gamma", &g, 0.1f, 3.0f))
+    {
         m_PBRRenderer->gamma = g;
     }
 
     // 2) 遍历所有光源，让用户修改位置和颜色
-    for (int i = 0; i < (int)m_PBRRenderer->lightPositions.size(); ++i) {
+    for (int i = 0; i < (int)m_PBRRenderer->lightPositions.size(); ++i)
+    {
         std::string prefix = "Light " + std::to_string(i) + ":  ";
 
         // 位置
         {
             glm::vec3& pos = m_PBRRenderer->lightPositions[i];
             std::string label = prefix + "Position";
-            if (ImGui::DragFloat3(label.c_str(), &pos.x, 0.1f, -20.0f, 20.0f)) {
+            if (ImGui::DragFloat3(label.c_str(), &pos.x, 0.1f, -20.0f, 20.0f))
+            {
                 // 只要用户拖动，就会修改 pos.x/y/z，PBRRenderer::RenderPBRScene() 会自动使用新值
             }
         }
@@ -204,8 +238,9 @@ void Application::ShowSettings() {
             glm::vec3& col = m_PBRRenderer->lightColors[i];
             std::string label = prefix + "Color";
             // ImGui 的 ColorEdit3 默认把值 clamp 到 [0,1]，如果你要 >1 的 HDR 亮度，可以先除 300 再乘回来，或者用 DragFloat3
-            float tmp[3] = { col.r / 300.0f, col.g / 300.0f, col.b / 300.0f };
-            if (ImGui::ColorEdit3(label.c_str(), tmp)) {
+            float tmp[3] = {col.r / 300.0f, col.g / 300.0f, col.b / 300.0f};
+            if (ImGui::ColorEdit3(label.c_str(), tmp))
+            {
                 col.r = tmp[0] * 300.0f;
                 col.g = tmp[1] * 300.0f;
                 col.b = tmp[2] * 300.0f;
@@ -221,7 +256,8 @@ void Application::ShowSettings() {
     ImGui::Begin("Camera Settings");
     {
         glm::vec3 camPos = m_Camera->Position;
-        if (ImGui::DragFloat3("Camera Position", &camPos.x, 0.1f, -20.0f, 20.0f)) {
+        if (ImGui::DragFloat3("Camera Position", &camPos.x, 0.1f, -20.0f, 20.0f))
+        {
             // 用户修改后，更新摄像机位置
             m_Camera->Position = camPos;
         }
@@ -231,7 +267,8 @@ void Application::ShowSettings() {
 }
 
 // 将 FPS/FrameTime + Lighting 设置 + Camera 设置，全部放到同一个 ImGui 窗口里
-void Application::ShowControls() {
+void Application::ShowControls()
+{
     // 可以在第一次打开时指定一个初始大小
     ImGui::SetNextWindowSize(ImVec2(400, 600), ImGuiCond_FirstUseEver);
 
@@ -239,7 +276,8 @@ void Application::ShowControls() {
     ImGui::Begin("Controls", nullptr, ImGuiWindowFlags_None);
 
     // —— 1) Performance 区（折叠条） —— 
-    if (ImGui::CollapsingHeader("Performance", ImGuiTreeNodeFlags_DefaultOpen)) {
+    if (ImGui::CollapsingHeader("Performance", ImGuiTreeNodeFlags_DefaultOpen))
+    {
         // “默认展开”（ImGuiTreeNodeFlags_DefaultOpen）可以去掉，改成默认收起
         ImGui::Text("FPS: %.1f", m_FPS);
         ImGui::Text("Frame Time: %.2f ms", m_FrameTimeMs);
@@ -247,17 +285,20 @@ void Application::ShowControls() {
     }
 
     // —— 2) Lighting Settings 区（折叠条） —— 
-    if (ImGui::CollapsingHeader("Lighting Settings", ImGuiTreeNodeFlags_DefaultOpen)) {
+    if (ImGui::CollapsingHeader("Lighting Settings", ImGuiTreeNodeFlags_DefaultOpen))
+    {
         // 调整 PBRRenderer 的 exposure / gamma
         {
             float expo = m_PBRRenderer->exposure;
-            if (ImGui::SliderFloat("Exposure", &expo, 0.01f, 10.0f)) {
+            if (ImGui::SliderFloat("Exposure", &expo, 0.01f, 10.0f))
+            {
                 m_PBRRenderer->exposure = expo;
             }
         }
         {
             float g = m_PBRRenderer->gamma;
-            if (ImGui::SliderFloat("Gamma", &g, 0.1f, 3.0f)) {
+            if (ImGui::SliderFloat("Gamma", &g, 0.1f, 3.0f))
+            {
                 m_PBRRenderer->gamma = g;
             }
         }
@@ -265,7 +306,8 @@ void Application::ShowControls() {
         ImGui::Separator();
 
         // 遍历光源，让用户修改位置和颜色
-        for (int i = 0; i < (int)m_PBRRenderer->lightPositions.size(); ++i) {
+        for (int i = 0; i < (int)m_PBRRenderer->lightPositions.size(); ++i)
+        {
             std::string prefix = "Light " + std::to_string(i) + ":  ";
             // 位置
             {
@@ -277,47 +319,165 @@ void Application::ShowControls() {
             {
                 glm::vec3& col = m_PBRRenderer->lightColors[i];
                 std::string label = prefix + "Color";
-                float tmp[3] = { col.r / 300.0f, col.g / 300.0f, col.b / 300.0f };
-                if (ImGui::ColorEdit3(label.c_str(), tmp)) {
+                float tmp[3] = {col.r / 300.0f, col.g / 300.0f, col.b / 300.0f};
+                if (ImGui::ColorEdit3(label.c_str(), tmp))
+                {
                     col.r = tmp[0] * 300.0f;
                     col.g = tmp[1] * 300.0f;
                     col.b = tmp[2] * 300.0f;
                 }
             }
-            ImGui::Separator();  // 每个光源分隔一条线
+            ImGui::Separator(); // 每个光源分隔一条线
         }
         ImGui::Spacing();
     }
 
     // —— 3) Camera Settings 区（折叠条） —— 
-    if (ImGui::CollapsingHeader("Camera Settings", ImGuiTreeNodeFlags_DefaultOpen)) {
+    if (ImGui::CollapsingHeader("Camera Settings", ImGuiTreeNodeFlags_DefaultOpen))
+    {
         // 调整摄像机位置
         glm::vec3 camPos = m_Camera->Position;
-        if (ImGui::DragFloat3("Camera Position", &camPos.x, 0.1f, -20.0f, 20.0f)) {
+        if (ImGui::DragFloat3("Camera Position", &camPos.x, 0.1f, -20.0f, 20.0f))
+        {
             m_Camera->Position = camPos;
         }
 
         // 如果你想让用户直接控制摄像机的 yaw / pitch，也可以如下：
-        
-        float yaw  = m_Camera->Yaw;
+
+        float yaw = m_Camera->Yaw;
         float pitch = m_Camera->Pitch;
-        if (ImGui::SliderFloat("Yaw", &yaw, -180.0f, 180.0f)) {
+        if (ImGui::SliderFloat("Yaw", &yaw, -180.0f, 180.0f))
+        {
             m_Camera->Yaw = yaw;
             m_Camera->updateCameraVectors();
         }
-        if (ImGui::SliderFloat("Pitch", &pitch, -89.0f, 89.0f)) {
+        if (ImGui::SliderFloat("Pitch", &pitch, -89.0f, 89.0f))
+        {
             m_Camera->Pitch = pitch;
             m_Camera->updateCameraVectors();
         }
-        
+
         ImGui::Spacing();
+    }
+
+    // —— 4) Environment 区 —— 
+    if (ImGui::CollapsingHeader("Environment"))
+    {
+        if (m_HDRIPaths.empty())
+        {
+            ImGui::TextDisabled("No HDR files found.");
+        }
+        else
+        {
+            // 先把文件名提取出来供 Combo 用
+            static std::vector<std::string> names;
+            names.clear();
+            names.reserve(m_HDRIPaths.size());
+            for (auto& p : m_HDRIPaths)
+            {
+                names.push_back(std::filesystem::path(p).filename().string());
+            }
+
+            // ImGui 要一个 const char* 数组
+            std::vector<const char*> items;
+            items.reserve(names.size());
+            for (auto& s : names) items.push_back(s.c_str());
+
+            // 下拉框
+            if (ImGui::Combo("HDRI Map", &m_CurrentHDRI, items.data(), (int)items.size()))
+            {
+                // 用户切换时，重新加载环境贴图
+                m_PBRRenderer->InitPBR(m_HDRIPaths[m_CurrentHDRI]);
+            }
+        }
+        ImGui::Spacing();
+    }
+
+    // —— 5) Material Selection 区 —— 
+    if (ImGui::CollapsingHeader("Material Selection", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        // 获取材质名列表
+        const auto& names = m_PBRRenderer->GetMaterialNames();
+        if (names.empty()) {
+            ImGui::TextDisabled("No materials loaded.");
+        } else {
+            // 转成 const char* 数组
+            std::vector<const char*> items;
+            items.reserve(names.size());
+            for (auto& s : names) items.push_back(s.c_str());
+
+            // 给每个球一个下拉框
+            for (int i = 0; i < 5; ++i) {
+                int idx = m_PBRRenderer->GetSphereMaterialIndex(i);
+                std::string label = "Sphere " + std::to_string(i) + " Mat";
+                if (ImGui::Combo(label.c_str(), &idx, items.data(), (int)items.size())) {
+                    // 用户切换后更新这一球材质
+                    m_PBRRenderer->SetSphereMaterialIndex(i, idx);
+                }
+            }
+        }
     }
 
     ImGui::End();
 }
 
 
-void Application::Update(float deltaTime) {
+void Application::ScanHDRDirectory(const std::string& directory)
+{
+    m_HDRIPaths.clear();
+    try
+    {
+        for (auto& entry : fs::directory_iterator(directory))
+        {
+            if (!entry.is_regular_file()) continue;
+            auto ext = entry.path().extension().string();
+            // 忽略大小写也能匹配 .HDR/.hdr
+            std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+            if (ext == ".hdr")
+            {
+                m_HDRIPaths.push_back(entry.path().string());
+            }
+        }
+    }
+    catch (const fs::filesystem_error& e)
+    {
+        std::cerr << "[Error] scanning HDR directory: " << e.what() << std::endl;
+    }
+
+    if (m_HDRIPaths.empty())
+    {
+        std::cerr << "[Warning] No .hdr files found in " << directory << std::endl;
+    }
+}
+
+void Application::ScanMaterialDirectory(const std::string& directory)
+{
+    m_MaterialNames.clear();
+    try
+    {
+        for (auto& entry : fs::directory_iterator(directory))
+        {
+            if (entry.is_directory())
+            {
+                // 只取文件夹名，例如 "rusted_iron"
+                m_MaterialNames.push_back(entry.path().filename().string());
+            }
+        }
+    }
+    catch (const fs::filesystem_error& e)
+    {
+        std::cerr << "[Error] scanning material directory: " << e.what() << std::endl;
+    }
+
+    if (m_MaterialNames.empty())
+    {
+        std::cerr << "[Warning] No material subfolders found in " << directory << std::endl;
+    }
+}
+
+
+void Application::Update(float deltaTime)
+{
     // 这里可以更新动画、物理。对于 PBR 示例而言，暂时不需要额外逻辑
 }
 

@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <vector>
+#include <filesystem>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -42,13 +43,27 @@ namespace renderer {
         void Resize(unsigned int width, unsigned int height);
 
         /// ImGui 面板：调用此函数将渲染 GUI 控件
-        void RenderImGui();
+        // void RenderImGui();
 
-        /// 更换材质贴图目录
-        void LoadMaterialFromFolder(const std::string& folderPath);
+        // materials
+        void LoadMaterialsFromDirectory(const std::string& parentDirectory);
+        void LoadAllMaterials(const std::vector<std::string>& materialNames,
+                          const std::string& baseDir);
+
+        /// 给某个球设置材质（只更新 materials[i]）
+        void SetMaterialForSphere(int sphereIndex, const std::string& folderPath);
+
+        /// 获取已经加载的材质文件夹名列表
+        const std::vector<std::string>& GetMaterialNames() const { return materialNames; }
+
+        /// 查询第 `sphereIndex` 号球当前使用的材质索引
+        int  GetSphereMaterialIndex(int sphereIndex) const;
+
+        /// 为第 `sphereIndex` 号球设置材质（传入材质列表中的索引）
+        void SetSphereMaterialIndex(int sphereIndex, int materialIndex);
 
         /// 更换 HDR 环境图
-        void LoadHDRI(const std::string& hdrPath);
+        // void LoadHDRI(const std::string& hdrPath);
 
         // ********** 新增：让外部可以访问并修改光源 **********
         std::vector<glm::vec3> lightPositions;
@@ -89,8 +104,12 @@ namespace renderer {
             unsigned int roughness;
             unsigned int ao;
         };
-        std::vector<MaterialTextures> materials;
-        std::vector<glm::vec3> materialPositions;
+
+        std::vector<MaterialTextures> allMaterials;    // 所有扫描到的材质
+        std::vector<std::string>      materialNames;   // 对应的文件夹名
+        std::vector<MaterialTextures> materials;       // 每个球当前使用的材质
+        std::vector<glm::vec3>        materialPositions;
+        std::vector<int>              sphereMaterialIdx;  // 每球所选材质 in allMaterials
 
         // 当前选择的材质和 HDR index
         int selectedMaterialIndex = 0;
